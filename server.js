@@ -46,6 +46,7 @@ const postMessage = (req, res) => {
   if (!req.body.text || !req.body.from) {
     return res.status(400).send("text/from file are empty");
   }
+  newMessage.timeSet = new Date();
   newMessage.id = messages.length;
   saveMessageToDatabase(newMessage);
   res.send(newMessage);
@@ -69,7 +70,10 @@ const findLatest = (req, res) => {
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
-
+// app.use((req, res, next) => {
+//   console.log("timeSent", Date.now());
+//   next()
+// });
 app.get("/messages", (req, res) => {
   res.send(messages);
 });
