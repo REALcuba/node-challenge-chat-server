@@ -59,6 +59,12 @@ const searchMessage = (req, res) => {
 
   res.send(findText);
 };
+
+const findLatest = (req, res) => {
+  const latest10 = messages.slice(-10);
+  console.log(latest10);
+  res.send(latest10);
+};
 //MIDDLEWARE
 app.use(express.json());
 app.use(bodyParser.json());
@@ -70,6 +76,7 @@ app.get("/messages", (req, res) => {
 
 app.post("/messages", postMessage);
 app.get("/messages/search", searchMessage);
+app.get("/messages/latest", findLatest);
 app.get("/messages/:id", getMessageById);
 
 app.delete("/messages/:id", (req, res) => {
@@ -77,7 +84,6 @@ app.delete("/messages/:id", (req, res) => {
   messages.splice(id, 1);
   res.send(messages);
 });
-
 
 app.listen(3000, () => {
   console.log("Listening on port 3000", "http://localhost:3000/");
