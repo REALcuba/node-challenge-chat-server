@@ -2,8 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
 const app = express();
-const messagesData = require("./messagesData.json")
-
+const messagesData = require("./messagesData.json");
+const bodyParser = require("body-parser");
 app.use(cors());
 
 const welcomeMessage = {
@@ -12,7 +12,7 @@ const welcomeMessage = {
   text: "Welcome to CYF chat system!",
 };
 
-const file = "messagesData.json"
+const file = "messagesData.json";
 //This array is our "data store".
 //We will start with one message in the array.
 //Note: messages will be lost when Glitch restarts our server.
@@ -23,59 +23,87 @@ app.get("/", function (request, response) {
 });
 
 //Functions
-function getMessagesFromDatabase() {
-  const text = fs.readFileSync(file);
-  return JSON.parse(text);
-}
-// function saveMessageToDatabase(messages) {
-//   messages.id = messagesData.length;
-//   fs.writeFileSync(file, JSON.stringify(messages, null, 2));
-
+// function getMessagesFromDatabase() {
+//   const text =
+// fs.readFileSync(file);
+// return JSON.parse(text);
 // }
+function saveMessageToDatabase(message) {
+  messages.push(message);
+}
 const getMessageById = (req, res) => {
-  const messages = getMessagesFromDatabase();
-  const id = Number(req.params.id)
+  const id = Number(req.params.id);
 
-  const message = messages.find(message => id === message.id)
-  res.send(message)
-
+  const message = messages.find((message) => id === message.id);
+  console.log(message);
+  res.send(message);
 };
 
 const postMessage = (req, res) => {
   let newMessage = req.body;
+  console.log("req body", req.body);
 
-  newMessage.id = messagesData.length;
-  console.log("req body", newMessage.id);
-  messagesData.push(newMessage);
-  // saveMessageToDatabase(messages)
-  res.send(newMessage)
+  if (!req.body.text || !req.body.from) {
+    return res.status(400).send("text/from file are empty");
+  }
+  newMessage.timeSet = new Date();
+  newMessage.id = messages.length;
+  saveMessageToDatabase(newMessage);
+  res.send(newMessage);
+};
 
-}
+const searchMessage = (req, res) => {
+  const text = req.query.text.toLowerCase();
+  const findText = messages.filter((message) =>
+    message.text.toLowerCase().includes(text)
+  );
 
-//WIREFRAME
+  res.send(findText);
+};
+
+const findLatest = (req, res) => {
+  const latest10 = messages.slice(-10);
+  console.log(latest10);
+  res.send(latest10);
+};
+//MIDDLEWARE
 app.use(express.json());
-
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+// app.use((req, res, next) => {
+//   console.log("timeSent", Date.now());
+//   next()
+// });
 app.get("/messages", (req, res) => {
-  res.send(messages)
-})
+  res.send(messages);
+});
+
+app.post("/messages", postMessage);
+app.get("/messages/search", searchMessage);
+app.get("/messages/latest", findLatest);
 app.get("/messages/:id", getMessageById);
 
-app.post("/messages", postMessage)
-
 app.delete("/messages/:id", (req, res) => {
-  const id = Number(req.params.id)
-  messages.splice(id, 1)
-  res.send(messages)
-})
-
-app.put("/messages?modifyMessage", (req, res) => {
-  const messages = getMessagesFromDatabase();
+  const id = Number(req.params.id);
+  messages.splice(id, 1);
+  res.send(messages);
+});
+app.put("/messages/:id", (req, res) => {
+  // const messages = getMessagesFromDatabase();
   const id = Number(req.params.id)
   const message = messages.find(message => id === message.id)
-  message.text = req.params.modifyMessage
-  res.send(message)
+  if (message) {
+    message.text = req.body.text;
+    message.from = req.body.from;
+    res.send({
+      status: 'Your message has been modified!',
+      data: message
+    });
+  } else {
+    res.status(400);
+    res.send('Your message has not been modified!');
+  }
 })
-
 app.listen(3000, () => {
-  console.log("Listening on port 3000")
+  console.log("Listening on port 3000", "http://localhost:3000/");
 });
