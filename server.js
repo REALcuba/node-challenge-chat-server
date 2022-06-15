@@ -37,7 +37,6 @@ const getMessageById = (req, res) => {
   const id = Number(req.params.id)
 
   const message = messages.find(message => id === message.id)
-  console.log(message);
   res.send(message)
 
 };
@@ -69,6 +68,13 @@ app.delete("/messages/:id", (req, res) => {
   res.send(messages)
 })
 
+app.put("/messages?modifyMessage", (req, res) => {
+  const messages = getMessagesFromDatabase();
+  const id = Number(req.params.id)
+  const message = messages.find(message => id === message.id)
+  message.text = req.params.modifyMessage
+  res.send(message)
+})
 
 app.listen(3000, () => {
   console.log("Listening on port 3000")
